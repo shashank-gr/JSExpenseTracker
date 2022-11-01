@@ -1,25 +1,29 @@
 /*
-adding event listner on form to get submit event
-adding event listenr on document to get DOMContentLoaded
-
-functions:
-onSubmit: take the input values, store in local storage, call the display function to display the details on screen
-displayStoredDetails: when DOM content is loaded, it calles the function. which again sends each of the obj in local staorage
-to display function.
-display: it takes the object, creates necessary DOM elements and append it to DOM.
-  ---it add event listeners to the newly created li element for delete and edit functionality
+API requests :https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails
 */
 
 const form = document.querySelector("form");
 
+//displayStoredDetails: runs when DOM is loaded to get the details from server to display on screen
 const displayStoredDetails = () => {
-  let keys = Object.keys(localStorage);
-  keys.forEach((key) => {
-    display(JSON.parse(localStorage.getItem(key)));
-  });
+  axios
+    .get(
+      "https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails"
+    )
+    .then((res) => {
+      const allExpenses = res.data;
+      allExpenses.forEach((expense) => {
+        display(expense);
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 };
+
+//dispay function takes each object and displays on screen
 const display = (obj) => {
-  let { amount, detail, category } = obj;
+  let { amount, detail, category } = obj; //object destructuring
 
   let ul = document.querySelector(".list");
 
@@ -37,54 +41,106 @@ const display = (obj) => {
   li.insertAdjacentElement("beforeend", btnEdit);
   ul.insertAdjacentElement("beforeend", li);
 
+  //adding edit and delete functionality
   li.addEventListener("click", (e) => {
-    if (e.target.textContent == "Delete") {
-      let key = e.target.parentElement.childNodes[0].textContent
-        .split(" ")
-        .join("");
-      localStorage.removeItem(key);
-      e.target.parentElement.remove();
-    } else if (e.target.textContent == "Edit") {
-      let key = e.target.parentElement.childNodes[0].textContent
-        .split(" ")
-        .join("");
-      let { amount, detail, category } = JSON.parse(localStorage.getItem(key));
+    e.preventDefault();
 
-      document.querySelector("#amount").value = `${amount}`;
-      document.querySelector("#details").value = `${detail}`;
-      document.querySelector("#category").value = `${category}`;
-      e.target.parentElement.remove();
-      localStorage.removeItem(key);
+    //Edit functionality--->make axios call,get expense obj, put the details in input, delete the obj in server and screen
+    if (e.target.classList == "btn btn-danger float-end") {
+      let key = e.target.parentElement.childNodes[0].textContent
+        .split(" ")
+        .join("");
+      axios
+        .get(
+          "https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails"
+        )
+        .then((res) => {
+          const allExpenses = res.data;
+          allExpenses.forEach((expense) => {
+            if (key == expense.amount + expense.detail + expense.category) {
+              e.target.parentElement.remove();
+              axios
+                .delete(
+                  `https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails/${expense._id}`
+                )
+                .then((res) => {
+                  console.log("deleted from backend");
+                })
+                .catch((err) => {
+                  console.error(err);
+                });
+            }
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+
+      //Delete functionality-->make axios call, delete from server, delte from screen
+    } else if (e.target.classList == "btn btn-light float-end") {
+      let key = e.target.parentElement.childNodes[0].textContent
+        .split(" ")
+        .join("");
+      axios
+        .get(
+          "https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails"
+        )
+        .then((res) => {
+          const allExpenses = res.data;
+          allExpenses.forEach((expense) => {
+            if (
+              key ==
+              expense.amount +
+                expense.detail.split(" ").join("") +
+                expense.category
+            ) {
+              document.querySelector("#amount").value = `${expense.amount}`;
+              document.querySelector("#details").value = `${expense.detail}`;
+              document.querySelector("#category").value = `${expense.category}`;
+              e.target.parentElement.remove();
+              axios
+                .delete(
+                  `https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails/${expense._id}`
+                )
+                .then((res) => {
+                  console.log("deleted from backend");
+                })
+                .catch((err) => {
+                  console.error(err);
+                });
+            }
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     }
   });
-  // btnDel.addEventListener("click", (e) => {
-  //   e.target.parentElement.remove();
-  // });
-  // btnEdit.addEventListener("click", (e) => {
-  //   let textArrray =
-  //     e.target.parentElement.childNodes[0].textContent.split(" ");
-  //   document.querySelector("#amount").value = `${textArrray[0]}`;
-  //   document.querySelector("#details").value = `${textArrray[1]}`;
-  //   document.querySelector("#category").value = `${textArrray[2]}`;
-  //   e.target.parentElement.remove();
-  // });
 };
 
+//onSubmit: is afunction to post the details to backend server and update on screen
 const onSubmit = (e) => {
   e.preventDefault();
   let expenseAmount = document.querySelector("#amount");
   let expenseDetails = document.querySelector("#details");
   let expenseCategory = document.querySelector("#category");
-  // console.log(expenseAmount, expenseDetails, expenseCategory);
   const expense = {
     amount: expenseAmount.value,
     detail: expenseDetails.value,
     category: expenseCategory.value,
   };
-  localStorage.setItem(
-    `${expense.amount}${expense.detail.split(" ").join("")}${expense.category}`,
-    JSON.stringify(expense)
-  );
+  axios
+    .post(
+      "https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails",
+      expense
+    )
+    .then((res) => {
+      console.log("post successful");
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
   display(expense);
   expenseAmount.value = "";
   expenseCategory.value = "";
