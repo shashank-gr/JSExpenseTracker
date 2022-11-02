@@ -1,5 +1,5 @@
 /*
-API requests :https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails
+API requests : https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails
 */
 
 const form = document.querySelector("form");
@@ -8,7 +8,7 @@ const form = document.querySelector("form");
 const displayStoredDetails = () => {
   axios
     .get(
-      "https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails"
+      "https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails"
     )
     .then((res) => {
       const allExpenses = res.data;
@@ -30,8 +30,8 @@ const display = (obj) => {
   let li = document.createElement("li");
   let btnDel = document.createElement("button");
   let btnEdit = document.createElement("button");
-  btnDel.classList = "btn btn-danger float-end";
-  btnEdit.classList = "btn btn-light float-end";
+  btnDel.className = "btn btn-danger float-end";
+  btnEdit.className = "btn btn-light float-end";
   btnEdit.textContent = "Edit";
   btnDel.textContent = "Delete";
 
@@ -46,24 +46,29 @@ const display = (obj) => {
     e.preventDefault();
 
     //Edit functionality--->make axios call,get expense obj, put the details in input, delete the obj in server and screen
-    if (e.target.classList == "btn btn-danger float-end") {
+    if (e.target.className == "btn btn-danger float-end") {
       let key = e.target.parentElement.childNodes[0].textContent
         .split(" ")
         .join("");
       axios
         .get(
-          "https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails"
+          "https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails"
         )
         .then((res) => {
           const allExpenses = res.data;
           allExpenses.forEach((expense) => {
-            if (key == expense.amount + expense.detail + expense.category) {
-              e.target.parentElement.remove();
+            if (
+              key ==
+              expense.amount +
+                expense.detail.split(" ").join("") +
+                expense.category
+            ) {
               axios
                 .delete(
-                  `https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails/${expense._id}`
+                  `https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails/${expense._id}`
                 )
                 .then((res) => {
+                  e.target.parentElement.remove();
                   console.log("deleted from backend");
                 })
                 .catch((err) => {
@@ -77,13 +82,16 @@ const display = (obj) => {
         });
 
       //Delete functionality-->make axios call, delete from server, delte from screen
-    } else if (e.target.classList == "btn btn-light float-end") {
+    } else if (e.target.className == "btn btn-light float-end") {
+      let expenseAmount = document.querySelector("#amount");
+      let expenseDetails = document.querySelector("#details");
+      let expenseCategory = document.querySelector("#category");
       let key = e.target.parentElement.childNodes[0].textContent
         .split(" ")
         .join("");
       axios
         .get(
-          "https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails"
+          "https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails"
         )
         .then((res) => {
           const allExpenses = res.data;
@@ -94,13 +102,13 @@ const display = (obj) => {
                 expense.detail.split(" ").join("") +
                 expense.category
             ) {
-              document.querySelector("#amount").value = `${expense.amount}`;
-              document.querySelector("#details").value = `${expense.detail}`;
-              document.querySelector("#category").value = `${expense.category}`;
+              expenseAmount.value = `${expense.amount}`;
+              expenseDetails.value = `${expense.detail}`;
+              expenseCategory.value = `${expense.category}`;
               e.target.parentElement.remove();
               axios
                 .delete(
-                  `https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails/${expense._id}`
+                  `https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails/${expense._id}`
                 )
                 .then((res) => {
                   console.log("deleted from backend");
@@ -131,7 +139,7 @@ const onSubmit = (e) => {
   };
   axios
     .post(
-      "https://crudcrud.com/api/d466242811624cfd879c0cae48f86782/expenseDetails",
+      "https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails",
       expense
     )
     .then((res) => {
