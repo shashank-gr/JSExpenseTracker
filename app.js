@@ -1,24 +1,35 @@
 /*
-API requests : https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails
+API requests : https://crudcrud.com/api/94a0488895224fbb94a6cc2cb5d6a26f/expenseDetails
 */
 
 const form = document.querySelector("form");
 
 //displayStoredDetails: runs when DOM is loaded to get the details from server to display on screen
-const displayStoredDetails = () => {
-  axios
-    .get(
-      "https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails"
-    )
-    .then((res) => {
-      const allExpenses = res.data;
-      allExpenses.forEach((expense) => {
-        display(expense);
-      });
-    })
-    .catch((err) => {
-      console.error(err);
+const displayStoredDetails = async () => {
+  try {
+    let response = await axios.get(
+      "https://crudcrud.com/api/94a0488895224fbb94a6cc2cb5d6a26f/expenseDetails"
+    );
+    const allExpenses = response.data;
+    allExpenses.forEach((expense) => {
+      display(expense);
     });
+    console.log("page loaded completly");
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+//to delete from server
+const deleteFromBackend = async (id) => {
+  try {
+    const response = await axios.delete(
+      `https://crudcrud.com/api/94a0488895224fbb94a6cc2cb5d6a26f/expenseDetails/${id}`
+    );
+    console.log("deleted from server");
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 //dispay function takes each object and displays on screen
@@ -26,7 +37,6 @@ const display = (obj) => {
   let { amount, detail, category } = obj; //object destructuring
 
   let ul = document.querySelector(".list");
-
   let li = document.createElement("li");
   let btnDel = document.createElement("button");
   let btnEdit = document.createElement("button");
@@ -42,92 +52,71 @@ const display = (obj) => {
   ul.insertAdjacentElement("beforeend", li);
 
   //adding edit and delete functionality
-  li.addEventListener("click", (e) => {
+  li.addEventListener("click", async (e) => {
     e.preventDefault();
 
     //Edit functionality--->make axios call,get expense obj, put the details in input, delete the obj in server and screen
     if (e.target.className == "btn btn-danger float-end") {
-      let key = e.target.parentElement.childNodes[0].textContent
+      let id = e.target.parentElement.childNodes[0].textContent
         .split(" ")
         .join("");
-      axios
-        .get(
-          "https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails"
-        )
-        .then((res) => {
-          const allExpenses = res.data;
-          allExpenses.forEach((expense) => {
-            if (
-              key ==
-              expense.amount +
-                expense.detail.split(" ").join("") +
-                expense.category
-            ) {
-              axios
-                .delete(
-                  `https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails/${expense._id}`
-                )
-                .then((res) => {
-                  e.target.parentElement.remove();
-                  console.log("deleted from backend");
-                })
-                .catch((err) => {
-                  console.error(err);
-                });
-            }
-          });
-        })
-        .catch((err) => {
-          console.error(err);
+
+      try {
+        let response = await axios.get(
+          "https://crudcrud.com/api/94a0488895224fbb94a6cc2cb5d6a26f/expenseDetails"
+        );
+        const allExpenses = response.data;
+        allExpenses.forEach(async (expense) => {
+          if (
+            id ==
+            expense.amount +
+              expense.detail.split(" ").join("") +
+              expense.category
+          ) {
+            await deleteFromBackend(expense._id);
+            e.target.parentElement.remove();
+            console.log("removed from UI");
+          }
         });
+      } catch (err) {
+        console.log(err);
+      }
 
       //Delete functionality-->make axios call, delete from server, delte from screen
     } else if (e.target.className == "btn btn-light float-end") {
-      let expenseAmount = document.querySelector("#amount");
-      let expenseDetails = document.querySelector("#details");
-      let expenseCategory = document.querySelector("#category");
-      let key = e.target.parentElement.childNodes[0].textContent
+      let id = e.target.parentElement.childNodes[0].textContent
         .split(" ")
         .join("");
-      axios
-        .get(
-          "https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails"
-        )
-        .then((res) => {
-          const allExpenses = res.data;
-          allExpenses.forEach((expense) => {
-            if (
-              key ==
-              expense.amount +
-                expense.detail.split(" ").join("") +
-                expense.category
-            ) {
-              expenseAmount.value = `${expense.amount}`;
-              expenseDetails.value = `${expense.detail}`;
-              expenseCategory.value = `${expense.category}`;
-              e.target.parentElement.remove();
-              axios
-                .delete(
-                  `https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails/${expense._id}`
-                )
-                .then((res) => {
-                  console.log("deleted from backend");
-                })
-                .catch((err) => {
-                  console.error(err);
-                });
-            }
-          });
-        })
-        .catch((err) => {
-          console.error(err);
+      try {
+        const response = await axios.get(
+          "https://crudcrud.com/api/94a0488895224fbb94a6cc2cb5d6a26f/expenseDetails"
+        );
+        const allExpenses = response.data;
+        allExpenses.forEach(async (expense) => {
+          if (
+            id ==
+            expense.amount +
+              expense.detail.split(" ").join("") +
+              expense.category
+          ) {
+            document.querySelector("#amount").value = expense.amount;
+            document.querySelector("#details").value = expense.detail;
+            document.querySelector("#category").value = expense.category;
+            await deleteFromBackend(expense._id);
+            e.target.parentElement.remove();
+            console.log("deleted from UI");
+          }
         });
+      } catch (err) {
+        console.log(err);
+      }
     }
   });
+  console.log("posted on UI");
 };
 
 //onSubmit: is afunction to post the details to backend server and update on screen
-const onSubmit = (e) => {
+const onSubmit = async (e) => {
   e.preventDefault();
   let expenseAmount = document.querySelector("#amount");
   let expenseDetails = document.querySelector("#details");
@@ -137,22 +126,20 @@ const onSubmit = (e) => {
     detail: expenseDetails.value,
     category: expenseCategory.value,
   };
-  axios
-    .post(
-      "https://crudcrud.com/api/e130aa2060454a02b10bc5d7790fdcd9/expenseDetails",
-      expense
-    )
-    .then((res) => {
-      console.log("post successful");
-    })
-    .catch((err) => {
-      console.error(err);
-    });
 
-  display(expense);
-  expenseAmount.value = "";
-  expenseCategory.value = "";
-  expenseDetails.value = "";
+  try {
+    let response = await axios.post(
+      "https://crudcrud.com/api/94a0488895224fbb94a6cc2cb5d6a26f/expenseDetails",
+      expense
+    );
+    console.log("Post successful in backend");
+    display(expense);
+    expenseAmount.value = "";
+    expenseCategory.value = "";
+    expenseDetails.value = "";
+  } catch (err) {
+    console.log(err);
+  }
 };
 form.addEventListener("submit", onSubmit);
 document.addEventListener("DOMContentLoaded", displayStoredDetails);
