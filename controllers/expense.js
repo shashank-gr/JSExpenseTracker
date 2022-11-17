@@ -9,7 +9,7 @@ exports.getAllExpenses = (req, res) => {
   });
 };
 
-//to send just one expense from DB for edit, hence deleteing expense from DB after send
+//to get individual expense by id
 exports.getExpense = (req, res) => {
   const id = req.params.id;
   Expense.findByPk(id)
@@ -18,15 +18,39 @@ exports.getExpense = (req, res) => {
     })
     .catch((err) => {
       console.log(err);
+    });
+};
+
+//to update the expense in DB and send the updated expense
+exports.updateExpense = (req, res) => {
+  const id = req.params.id;
+  Expense.update(
+    {
+      amount: req.body.amount,
+      description: req.body.description,
+      category: req.body.category,
+    },
+    {
+      where: { id: id },
+    }
+  )
+    .then(() => {
+      return Expense.findByPk(id);
     })
-    .finally(() => {
-      Expense.destroy({ where: { id } });
+    .then((expense) => {
+      res.status(200).send({
+        expense: expense.dataValues,
+        msg: "success updated the expense in DB",
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).send({ msg: "Internal Error", err });
     });
 };
 
 //add new expense to DB
 exports.addExpense = (req, res) => {
-  // console.log(req.body);
   if (req.body.amount && req.body.description && req.body.category) {
     Expense.create({
       amount: req.body.amount,
@@ -34,7 +58,6 @@ exports.addExpense = (req, res) => {
       category: req.body.category,
     })
       .then((result) => {
-        // console.log(result);
         res
           .status(200)
           .send({ expense: result.dataValues, msg: "success added to DB" });
@@ -48,6 +71,7 @@ exports.addExpense = (req, res) => {
   }
 };
 
+//to delete expense by id
 exports.deleteExpense = (req, res) => {
   const id = req.params.id;
   Expense.destroy({ where: { id } })

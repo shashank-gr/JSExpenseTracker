@@ -1,21 +1,22 @@
 const form = document.querySelector("#form");
 
+//adding event listners to the each expense list item
 const onClick = async (e) => {
   e.preventDefault();
   if (e.target.textContent == "Edit") {
     const id = e.target.parentElement.childNodes[1].value;
+    console.log(id);
     try {
       const response = await axios.get(`http://localhost:3600/${id}`);
-      // console.log(response.data);
       document.querySelector("#amount").value = response.data.amount;
       document.querySelector("#details").value = response.data.description;
       document.querySelector("#category").value = response.data.category;
+      document.querySelector("#expense-id").value = response.data.id;
       e.target.parentElement.remove();
     } catch (err) {
       console.log(err);
     }
   } else if (e.target.textContent == "Delete") {
-    // console.log(e.target.parentElement);
     const id = e.target.parentElement.childNodes[1].value;
     try {
       const response = await axios.delete(`http://localhost:3600/${id}`);
@@ -27,6 +28,7 @@ const onClick = async (e) => {
   }
 };
 
+//to display each individual expense on client
 const displayExpense = ({ id, amount, description, category }) => {
   let ul = document.querySelector(".list");
 
@@ -54,27 +56,56 @@ const displayExpense = ({ id, amount, description, category }) => {
   ul.insertAdjacentElement("beforeend", li);
 };
 
+//to update a expense
+const updateProduct = async (id, expense) => {
+  try {
+    const response = await axios.patch(`http://localhost:3600/${id}`, expense);
+    displayExpense(response.data.expense);
+    console.log(response.data.msg);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+//to either save a new expense or update a existing expense based on whether id is present or not
 const sendData = async (e) => {
   e.preventDefault();
   const expenseAmount = document.querySelector("#amount");
   const expenseDetail = document.querySelector("#details");
   const expenseCategory = document.querySelector("#category");
-  try {
+  const expenseId = document.querySelector("#expense-id").value;
+  if (expenseId) {
     const expense = {
+      id: expenseId,
       amount: expenseAmount.value,
       description: expenseDetail.value,
       category: expenseCategory.value,
     };
-    const response = await axios.post("http://localhost:3600/", expense);
-    console.log(response.data.msg);
-    displayExpense(response.data.expense);
+    updateProduct(expenseId, expense);
     expenseAmount.value = "";
     expenseDetail.value = "";
     expenseCategory.value = "";
-  } catch (error) {
-    error.response ? console.log(error.response.data) : console.log(error);
+    document.querySelector("#expense-id").value = "";
+  } else {
+    try {
+      const expense = {
+        amount: expenseAmount.value,
+        description: expenseDetail.value,
+        category: expenseCategory.value,
+      };
+      const response = await axios.post("http://localhost:3600/", expense);
+      console.log(response.data.msg);
+      displayExpense(response.data.expense);
+      expenseAmount.value = "";
+      expenseDetail.value = "";
+      expenseCategory.value = "";
+    } catch (error) {
+      error.response ? console.log(error.response.data) : console.log(error);
+    }
   }
 };
+
+//to get all expense from DB and display on client
 const displayAll = async () => {
   try {
     const response = await axios.get("http://localhost:3600/");
